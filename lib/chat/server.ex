@@ -1,14 +1,16 @@
 defmodule Chat.Server do
-  use GenServer
-  # API
+  use GenServer, start: {__MODULE__, :start_link, []}
+
+  @registry_name Registry.ChatRoom
+
   def start_link(name) do
-    GenServer.start_link(__MODULE__, [], name: :chat_room)
+    GenServer.start_link(__MODULE__, [], name: via_registry(name))
   end
   def add_message(name, message) do
-    GenServer.cast(:chat_room, {:add_message, message})
+    GenServer.cast(via_registry(name), {:add_message, message})
   end
   def get_messages(name) do
-    GenServer.call(:chat_room, :get_messages)
+    GenServer.call(via_registry(name), :get_messages)
   end
   # SERVER
   def init(messages) do
@@ -22,6 +24,10 @@ defmodule Chat.Server do
   end
 
   defp via_registry(name) do
-    {:via, Registry, {Registry.ChatRoom, name}}
+    {:via, Registry, {@registry_name, name}}
+  end
+
+  def registry_name do
+    @registry_name
   end
 end
